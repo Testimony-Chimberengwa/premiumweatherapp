@@ -886,11 +886,42 @@ body {
 
 .footer-note {
   margin-top: 18px;
+  padding: 16px 18px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(99, 255, 141, 0.16);
+  background: rgba(2, 10, 5, 0.82);
   text-align: center;
-  color: rgba(190, 255, 198, 0.6);
-  font-size: 0.85rem;
+  color: rgba(190, 255, 198, 0.72);
+  display: grid;
+  gap: 8px;
   font-family: 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.9rem;
+}
+
+.footer-note p {
+  margin: 0;
+}
+
+.footer-source {
+  color: rgba(190, 255, 198, 0.58);
+}
+
+.sponsor-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sponsor-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 255, 141, 0.16);
+  background: rgba(99, 255, 141, 0.08);
+  color: var(--accent-2);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 @keyframes drift {

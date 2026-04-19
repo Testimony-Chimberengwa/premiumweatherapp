@@ -233,6 +233,7 @@ function CustomChartTooltip({ active, payload, label, unitLabel }) {
 }
 
 function App() {
+  const currentYear = new Date().getFullYear()
   const [query, setQuery] = useState('')
   const [weather, setWeather] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -912,7 +913,13 @@ function App() {
       )}
 
       <footer className="footer-note">
-        Data source: WeatherAPI forecast, alerts, and air quality endpoints.
+        <p>Copyright &copy; {currentYear} Premium Weather. All rights reserved.</p>
+        <p className="footer-source">Data source: WeatherAPI forecast, alerts, and air quality endpoints.</p>
+        <div className="sponsor-row" aria-label="Sponsors and partners">
+          <span className="sponsor-chip">Powered by WeatherAPI</span>
+          <span className="sponsor-chip">Quotes via RapidAPI</span>
+          <span className="sponsor-chip">Built for GitHub</span>
+        </div>
       </footer>
     </div>
   )
