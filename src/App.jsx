@@ -95,6 +95,48 @@ function buildHourlyData(days = [], currentEpoch = 0, isCelsius = true) {
     }))
 }
 
+function getWeatherEffects(weather) {
+  const text = weather?.current?.condition?.text?.toLowerCase() || ''
+  const rainChance = Number(weather?.forecast?.forecastday?.[0]?.day?.daily_chance_of_rain || 0)
+  const precip = Number(weather?.current?.precip_mm || 0)
+  const wind = Number(weather?.current?.wind_kph || 0)
+  const gust = Number(weather?.current?.gust_kph || 0)
+
+  const stormText =
+    text.includes('thunder') ||
+    text.includes('storm') ||
+    text.includes('rain') ||
+    text.includes('drizzle') ||
+    text.includes('shower')
+
+  const isRainy = stormText || rainChance >= 35 || precip >= 1
+  const isHeavyRain = rainChance >= 60 || precip >= 5 || text.includes('heavy')
+  const isFloodRisk = rainChance >= 70 || precip >= 8 || text.includes('flood')
+  const isWindy = wind >= 18 || gust >= 28 || text.includes('wind') || text.includes('gust')
+  const isLightning = text.includes('thunder') || text.includes('storm')
+
+  return {
+    isRainy,
+    isHeavyRain,
+    isFloodRisk,
+    isWindy,
+    isLightning,
+  }
+}
+
+function buildParticles(count, prefix, minDuration = 1.8, maxDuration = 3.8) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}-${index}`,
+    left: `${(index * 13) % 100}%`,
+    delay: `${(index * 0.17) % 3.5}s`,
+    duration: `${minDuration + ((index * 0.31) % (maxDuration - minDuration))}s`,
+  }))
+}
+
+function normalizeLocationLabel(value = '') {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
 function CustomChartTooltip({ active, payload, label, unitLabel }) {
   if (!active || !payload?.length) return null
   return (
@@ -204,6 +246,18 @@ function App() {
   const alerts = weather?.alerts?.alert || []
   const airQuality = weather?.current?.air_quality || null
   const epaIndex = airQuality?.['us-epa-index'] || 0
+  const weatherEffects = getWeatherEffects(weather)
+  const rainDrops = buildParticles(weatherEffects.isHeavyRain ? 46 : weatherEffects.isRainy ? 28 : 0, 'rain', 1.4, 2.6)
+  const windStreaks = buildParticles(weatherEffects.isWindy ? 18 : 0, 'wind', 1.8, 3.5)
+  const floodWaves = buildParticles(weatherEffects.isFloodRisk ? 8 : weatherEffects.isHeavyRain ? 5 : 0, 'flood', 3.5, 6)
+  const lightningBolts = buildParticles(weatherEffects.isLightning ? 4 : 0, 'bolt', 4, 7)
+  const activeLocationLabel = normalizeLocationLabel(
+    weather?.location ? `${weather.location.name}, ${weather.location.country}` : '',
+  )
+  const suggestionItems = suggestions.filter((item) => {
+    const suggestionLabel = normalizeLocationLabel(`${item.name}, ${item.country}`)
+    return suggestionLabel !== activeLocationLabel
+  })
 
   const hourlyData = buildHourlyData(
     forecastDays,
@@ -214,11 +268,15 @@ function App() {
   const handleSubmit = (event) => {
     event.preventDefault()
     const trimmed = query.trim()
-    if (trimmed) loadWeather(trimmed, 'search')
+    if (trimmed) {
+      setShowSuggestions(false)
+      loadWeather(trimmed, 'search')
+    }
   }
 
   const selectSuggestion = (item) => {
     const location = `${item.name}, ${item.country}`
+    setShowSuggestions(false)
     loadWeather(location, 'search')
   }
 
@@ -276,6 +334,11 @@ function App() {
               }
             }}
             onFocus={() => setShowSuggestions(true)}
+            onBlur={() => {
+              setTimeout(() => {
+                setShowSuggestions(false)
+              }, 120)
+            }}
             placeholder="Search city, region, or coordinates"
             aria-label="Search for weather by location"
           />
@@ -284,14 +347,14 @@ function App() {
           </button>
 
           <AnimatePresence>
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && query.trim().length >= 2 && suggestionItems.length > 0 && (
               <Motion.ul
                 className="suggestions"
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
               >
-                {suggestions.map((item) => (
+                {suggestionItems.map((item) => (
                   <li key={`${item.id}-${item.lat}-${item.lon}`}>
                     <button
                       type="button"
@@ -344,6 +407,55 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
+            <div className="hero-effects" aria-hidden="true">
+              {weatherEffects.isRainy && (
+                <div className="weather-overlay rain-overlay">
+                  {rainDrops.map((drop) => (
+                    <span
+                      key={drop.id}
+                      className="rain-drop"
+                      style={{ left: drop.left, animationDelay: drop.delay, animationDuration: drop.duration }}
+                    />
+                  ))}
+                </div>
+              )}
+              {weatherEffects.isWindy && (
+                <div className="weather-overlay wind-overlay">
+                  {windStreaks.map((streak) => (
+                    <span
+                      key={streak.id}
+                      className="wind-streak"
+                      style={{ top: streak.left, animationDelay: streak.delay, animationDuration: streak.duration }}
+                    />
+                  ))}
+                </div>
+              )}
+              {(weatherEffects.isFloodRisk || weatherEffects.isHeavyRain) && (
+                <div className="weather-overlay flood-overlay">
+                  <div className="flood-glow" />
+                  <div className="flood-water">
+                    {floodWaves.map((wave) => (
+                      <span
+                        key={wave.id}
+                        className="flood-wave"
+                        style={{ left: wave.left, animationDelay: wave.delay, animationDuration: wave.duration }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {weatherEffects.isLightning && (
+                <div className="weather-overlay lightning-overlay">
+                  {lightningBolts.map((bolt) => (
+                    <span
+                      key={bolt.id}
+                      className="lightning-bolt"
+                      style={{ left: bolt.left, animationDelay: bolt.delay, animationDuration: bolt.duration }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="hero-main">
               <p className="eyebrow">
                 {locationMode === 'geolocation' ? 'Live from your location' : 'Searched location'}
