@@ -27,6 +27,7 @@ const API_BASE = 'https://api.weatherapi.com/v1'
 const QUOTES_API_KEY = import.meta.env.VITE_QUOTES_API_KEY || ''
 const QUOTES_API_HOST = import.meta.env.VITE_QUOTES_API_HOST || 'famous-quotes4.p.rapidapi.com'
 const QUOTES_API_URL = import.meta.env.VITE_QUOTES_API_URL || 'https://famous-quotes4.p.rapidapi.com/random?category=all&count=1'
+const LAST_QUOTE_STORAGE_KEY = 'premiumweather:last-quote'
 
 const fallbackQuotes = [
   {
@@ -180,6 +181,44 @@ function parseQuoteResponse(data) {
   }
 }
 
+function getQuoteKey(quote) {
+  if (!quote?.text) return ''
+  return `${quote.text}__${quote.author || ''}`.toLowerCase()
+}
+
+function getLastQuoteKey() {
+  if (typeof window === 'undefined') return ''
+
+  try {
+    return window.localStorage.getItem(LAST_QUOTE_STORAGE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+function setLastQuoteKey(quote) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(LAST_QUOTE_STORAGE_KEY, getQuoteKey(quote))
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function pickFallbackQuote(excludeKey = '') {
+  const previousKey = excludeKey || getLastQuoteKey()
+  const availableQuotes = fallbackQuotes.filter((item) => getQuoteKey(item) !== previousKey)
+  const pool = availableQuotes.length ? availableQuotes : fallbackQuotes
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+function buildQuoteRequestUrl() {
+  const url = new URL(QUOTES_API_URL)
+  url.searchParams.set('cb', `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  return url.toString()
+}
+
 function CustomChartTooltip({ active, payload, label, unitLabel }) {
   if (!active || !payload?.length) return null
   return (
@@ -240,30 +279,47 @@ function App() {
 
     try {
       if (!QUOTES_API_KEY) {
-        setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+        const fallbackQuote = pickFallbackQuote()
+        setQuote(fallbackQuote)
+        setLastQuoteKey(fallbackQuote)
         return
       }
 
-      const response = await fetch(QUOTES_API_URL, {
-        headers: {
-          'X-RapidAPI-Key': QUOTES_API_KEY,
-          'X-RapidAPI-Host': QUOTES_API_HOST,
-        },
-      })
-      const data = await response.json()
+      const previousQuoteKey = getLastQuoteKey()
+      let parsedQuote = null
 
-      if (!response.ok) {
-        throw new Error(data?.message || 'Unable to load quote.')
+      for (let attempt = 0; attempt < 2 && !parsedQuote; attempt += 1) {
+        const response = await fetch(buildQuoteRequestUrl(), {
+          cache: 'no-store',
+          headers: {
+            'X-RapidAPI-Key': QUOTES_API_KEY,
+            'X-RapidAPI-Host': QUOTES_API_HOST,
+          },
+        })
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data?.message || 'Unable to load quote.')
+        }
+
+        const parsed = parseQuoteResponse(data)
+        if (parsed?.text && getQuoteKey(parsed) !== previousQuoteKey) {
+          parsedQuote = parsed
+        }
       }
 
-      const parsed = parseQuoteResponse(data)
-      if (parsed?.text) {
-        setQuote(parsed)
+      if (parsedQuote?.text) {
+        setQuote(parsedQuote)
+        setLastQuoteKey(parsedQuote)
       } else {
-        setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+        const fallbackQuote = pickFallbackQuote(previousQuoteKey)
+        setQuote(fallbackQuote)
+        setLastQuoteKey(fallbackQuote)
       }
     } catch {
-      setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+      const fallbackQuote = pickFallbackQuote()
+      setQuote(fallbackQuote)
+      setLastQuoteKey(fallbackQuote)
     } finally {
       setQuoteLoading(false)
     }
