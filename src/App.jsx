@@ -337,6 +337,8 @@ function App() {
   const windStreaks = buildParticles(weatherEffects.isWindy ? 18 : 0, 'wind', 1.8, 3.5)
   const floodWaves = buildParticles(weatherEffects.isFloodRisk ? 8 : weatherEffects.isHeavyRain ? 5 : 0, 'flood', 3.5, 6)
   const lightningBolts = buildParticles(weatherEffects.isLightning ? 4 : 0, 'bolt', 4, 7)
+  const speedometerValue = Math.min(100, Math.max(0, Math.round(((weather?.current?.wind_kph || 0) / 60) * 100)))
+  const speedometerRotation = -90 + speedometerValue * 1.8
   const activeLocationLabel = normalizeLocationLabel(
     weather?.location ? `${weather.location.name}, ${weather.location.country}` : '',
   )
@@ -575,6 +577,22 @@ function App() {
                 src={weather.current.condition.icon}
                 alt={weather.current.condition.text}
               />
+              <div className="speedometer-card">
+                <div className="speedometer-dial">
+                  <div className="speedometer-ring" />
+                  <Motion.div
+                    className="speedometer-needle"
+                    animate={{ rotate: speedometerRotation }}
+                    transition={{ type: 'spring', stiffness: 70, damping: 16 }}
+                  />
+                  <div className="speedometer-center">
+                    <span>WIND</span>
+                    <strong>{Math.round(weather.current.wind_kph)}</strong>
+                    <small>km/h</small>
+                  </div>
+                </div>
+                <p className="speedometer-caption">Animated speedometer</p>
+              </div>
               <div className="wind-chip">
                 <FiWind /> Wind {Math.round(weather.current.wind_kph)} km/h
               </div>
