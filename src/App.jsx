@@ -3,6 +3,7 @@ import { AnimatePresence, motion as Motion } from 'framer-motion'
 import {
   FiCloudDrizzle,
   FiCompass,
+  FiCode,
   FiMapPin,
   FiMoon,
   FiNavigation,
@@ -42,6 +43,14 @@ const fallbackQuotes = [
     author: 'Walt Whitman',
     text: 'Keep your face always toward the sunshine, and shadows will fall behind you.',
   },
+]
+
+const signatureLines = [
+  'testimony~$root :: crafted this app',
+  'echo "forecasting the future in green"',
+  'npm run weather -- --legendary',
+  'git commit -m "made the sky look cool"',
+  'const mood = "premium"',
 ]
 
 const epaLabels = {
@@ -396,6 +405,8 @@ function App() {
   const lightningBolts = buildParticles(weatherEffects.isLightning ? 4 : 0, 'bolt', 4, 7)
   const speedometerValue = Math.min(100, Math.max(0, Math.round(((weather?.current?.wind_kph || 0) / 60) * 100)))
   const speedometerRotation = -90 + speedometerValue * 1.8
+  const normalizedQuery = normalizeLocationLabel(query)
+  const isTestimonySearch = normalizedQuery.includes('testimony')
   const activeLocationLabel = normalizeLocationLabel(
     weather?.location ? `${weather.location.name}, ${weather.location.country}` : '',
   )
@@ -403,6 +414,7 @@ function App() {
     const suggestionLabel = normalizeLocationLabel(`${item.name}, ${item.country}`)
     return suggestionLabel !== activeLocationLabel
   })
+  const displaySuggestions = isTestimonySearch ? suggestionItems.slice(0, 3) : suggestionItems
 
   const hourlyData = buildHourlyData(
     forecastDays,
@@ -496,14 +508,28 @@ function App() {
           </button>
 
           <AnimatePresence>
-            {showSuggestions && query.trim().length >= 2 && suggestionItems.length > 0 && (
+            {showSuggestions && query.trim().length >= 2 && (isTestimonySearch || displaySuggestions.length > 0) && (
               <Motion.ul
                 className="suggestions"
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
               >
-                {suggestionItems.map((item) => (
+                {isTestimonySearch && (
+                  <li className="signature-block" aria-label="Testimony easter egg">
+                    <div className="signature-head">
+                      <FiCode />
+                      <span>testimony mode unlocked</span>
+                    </div>
+                    {signatureLines.map((line) => (
+                      <div key={line} className="signature-line">
+                        <span className="signature-prompt">&gt;</span>
+                        <code>{line}</code>
+                      </div>
+                    ))}
+                  </li>
+                )}
+                {displaySuggestions.map((item) => (
                   <li key={`${item.id}-${item.lat}-${item.lon}`}>
                     <button
                       type="button"
@@ -913,7 +939,10 @@ function App() {
       )}
 
       <footer className="footer-note">
-        <p>Copyright &copy; {currentYear} Premium Weather. All rights reserved.</p>
+        <p>
+          Copyright &copy; {currentYear} Premium Weather. Crafted by{' '}
+          <span className="footer-signature">testimony~$root</span>.
+        </p>
         <p className="footer-source">Data source: WeatherAPI forecast, alerts, and air quality endpoints.</p>
         <div className="sponsor-row" aria-label="Sponsors and partners">
           <span className="sponsor-chip">Powered by WeatherAPI</span>
