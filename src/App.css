@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Press+Start+2P&family=Ubuntu+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -240,7 +240,7 @@ body {
   display: grid;
   place-items: center;
   color: #051006;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.7rem;
   background: linear-gradient(135deg, #b6ff66, #63ff8d);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 0 24px rgba(99, 255, 141, 0.25);
@@ -248,10 +248,11 @@ body {
 
 .brand h1 {
   margin: 0;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.9rem, 1.7vw, 1.15rem);
-  line-height: 1.45;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: clamp(1rem, 1.8vw, 1.3rem);
+  line-height: 1.3;
   color: var(--accent);
+  letter-spacing: 0.02em;
 }
 
 .brand p {
@@ -299,8 +300,8 @@ body {
   padding: 8px 13px;
   cursor: pointer;
   color: #021006;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.62rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
   background: linear-gradient(135deg, #b6ff66, #63ff8d);
 }
 
@@ -397,17 +398,18 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: rgba(182, 255, 102, 0.8);
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.55rem;
   line-height: 1.6;
 }
 
 .hero-main h2 {
   margin: 10px 0 8px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1.2rem, 2.8vw, 2.1rem);
-  line-height: 1.5;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  line-height: 1.2;
   color: #eaffea;
+  letter-spacing: 0.01em;
 }
 
 .localtime,
@@ -571,7 +573,7 @@ body {
 
 .alerts h3 {
   margin-top: 0;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.8rem;
 }
 
@@ -611,8 +613,8 @@ body {
 .metric p {
   margin: 8px 0 4px;
   color: var(--text-dim);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.48rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
   line-height: 1.6;
 }
 
@@ -642,7 +644,7 @@ body {
 .panel-head h3,
 .forecast-panel h3,
 .astro-panel h3 {
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.82rem;
 }
 
@@ -701,8 +703,8 @@ body {
   color: var(--text-dim);
   font-size: 0.84rem;
   display: block;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.44rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
   line-height: 1.6;
 }
 
@@ -734,8 +736,8 @@ body {
 .forecast-summary span {
   display: block;
   color: var(--text-dim);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.42rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
   line-height: 1.6;
 }
 
@@ -799,8 +801,8 @@ body {
 .quote-card footer {
   margin-top: 12px;
   color: var(--accent-2);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.48rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
   line-height: 1.6;
 }
 
@@ -828,8 +830,8 @@ body {
 }
 
 .forecast-card h4 {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.48rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
   line-height: 1.6;
 }
 
@@ -839,8 +841,8 @@ body {
 }
 
 .forecast-card p {
-  font-family: 'VT323', monospace;
-  font-size: 1.35rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.98rem;
 }
 
 .forecast-card .range {
@@ -871,8 +873,8 @@ body {
 .astro-grid span {
   color: var(--text-dim);
   font-size: 0.85rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.42rem;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
   line-height: 1.6;
 }
 
