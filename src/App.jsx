@@ -4,6 +4,7 @@ import {
   FiCloudDrizzle,
   FiCompass,
   FiCode,
+  FiCopy,
   FiMapPin,
   FiMoon,
   FiNavigation,
@@ -253,6 +254,7 @@ function App() {
   const [locationMode, setLocationMode] = useState('default')
   const [quote, setQuote] = useState(fallbackQuotes[0])
   const [quoteLoading, setQuoteLoading] = useState(false)
+  const [signatureCopied, setSignatureCopied] = useState(false)
 
   const loadWeather = useCallback(async (location, mode = 'search') => {
     if (!API_KEY) {
@@ -441,6 +443,20 @@ function App() {
     loadQuote()
   }
 
+  const signatureText = signatureLines.join('\n')
+
+  const copySignature = async () => {
+    try {
+      await navigator.clipboard.writeText(signatureText)
+      setSignatureCopied(true)
+      window.setTimeout(() => {
+        setSignatureCopied(false)
+      }, 1600)
+    } catch {
+      setError('Copy failed in this browser. You can still read the signature text.')
+    }
+  }
+
   const refreshMyLocation = () => {
     if (!navigator.geolocation) {
       setError('Geolocation is not available in this browser.')
@@ -518,14 +534,25 @@ function App() {
                 {isTestimonySearch && (
                   <li className="signature-block" aria-label="Testimony easter egg">
                     <div className="signature-head">
-                      <FiCode />
-                      <span>testimony mode unlocked</span>
+                      <div className="signature-head-title">
+                        <FiCode />
+                        <span>testimony mode unlocked</span>
+                      </div>
+                      <button type="button" className="signature-copy" onClick={copySignature}>
+                        <FiCopy /> {signatureCopied ? 'Copied' : 'Copy'}
+                      </button>
                     </div>
-                    {signatureLines.map((line) => (
-                      <div key={line} className="signature-line">
+                    {signatureLines.map((line, index) => (
+                      <Motion.div
+                        key={line}
+                        className="signature-line"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.24, delay: 0.08 + index * 0.09 }}
+                      >
                         <span className="signature-prompt">&gt;</span>
                         <code>{line}</code>
-                      </div>
+                      </Motion.div>
                     ))}
                   </li>
                 )}
@@ -941,7 +968,9 @@ function App() {
       <footer className="footer-note">
         <p>
           Copyright &copy; {currentYear} Premium Weather. Crafted by{' '}
-          <span className="footer-signature">testimony~$root</span>.
+          <button type="button" className="footer-signature" onClick={copySignature}>
+            testimony~$root
+          </button>.
         </p>
         <p className="footer-source">Data source: WeatherAPI forecast, alerts, and air quality endpoints.</p>
         <div className="sponsor-row" aria-label="Sponsors and partners">
