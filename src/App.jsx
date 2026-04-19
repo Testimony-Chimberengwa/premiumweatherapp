@@ -24,6 +24,24 @@ import './App.css'
 
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY || '97ff2968860e41f2889104430261904'
 const API_BASE = 'https://api.weatherapi.com/v1'
+const QUOTES_API_KEY = import.meta.env.VITE_QUOTES_API_KEY || ''
+const QUOTES_API_HOST = import.meta.env.VITE_QUOTES_API_HOST || 'famous-quotes4.p.rapidapi.com'
+const QUOTES_API_URL = import.meta.env.VITE_QUOTES_API_URL || 'https://famous-quotes4.p.rapidapi.com/random?category=all&count=1'
+
+const fallbackQuotes = [
+  {
+    author: 'Samuel Butler',
+    text: 'The best way to prepare for tomorrow is to do your best today.',
+  },
+  {
+    author: 'Maya Angelou',
+    text: 'Nothing will work unless you do.',
+  },
+  {
+    author: 'Walt Whitman',
+    text: 'Keep your face always toward the sunshine, and shadows will fall behind you.',
+  },
+]
 
 const epaLabels = {
   1: 'Good',
@@ -137,6 +155,31 @@ function normalizeLocationLabel(value = '') {
   return value.replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
+function getForecastSummary(days = []) {
+  if (!days.length) return null
+
+  const firstDay = days[0]
+  const secondDay = days[1]
+  const thirdDay = days[2]
+
+  return {
+    today: firstDay,
+    tomorrow: secondDay,
+    nextDay: thirdDay,
+  }
+}
+
+function parseQuoteResponse(data) {
+  const entry = Array.isArray(data) ? data[0] : data
+  if (!entry) return null
+
+  return {
+    text: entry.text || entry.quote || entry.message || '',
+    author: entry.author || entry.name || 'Unknown',
+    category: entry.category || 'inspiration',
+  }
+}
+
 function CustomChartTooltip({ active, payload, label, unitLabel }) {
   if (!active || !payload?.length) return null
   return (
@@ -159,6 +202,8 @@ function App() {
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locationMode, setLocationMode] = useState('default')
+  const [quote, setQuote] = useState(fallbackQuotes[0])
+  const [quoteLoading, setQuoteLoading] = useState(false)
 
   const loadWeather = useCallback(async (location, mode = 'search') => {
     if (!API_KEY) {
@@ -190,6 +235,40 @@ function App() {
     }
   }, [])
 
+  const loadQuote = useCallback(async () => {
+    setQuoteLoading(true)
+
+    try {
+      if (!QUOTES_API_KEY) {
+        setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+        return
+      }
+
+      const response = await fetch(QUOTES_API_URL, {
+        headers: {
+          'X-RapidAPI-Key': QUOTES_API_KEY,
+          'X-RapidAPI-Host': QUOTES_API_HOST,
+        },
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to load quote.')
+      }
+
+      const parsed = parseQuoteResponse(data)
+      if (parsed?.text) {
+        setQuote(parsed)
+      } else {
+        setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+      }
+    } catch {
+      setQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)])
+    } finally {
+      setQuoteLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!navigator.geolocation) {
       queueMicrotask(() => {
@@ -211,6 +290,12 @@ function App() {
       },
     )
   }, [loadWeather])
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      loadQuote()
+    })
+  }, [loadQuote, weather?.location?.name])
 
   useEffect(() => {
     if (!API_KEY) return
@@ -243,6 +328,7 @@ function App() {
   const unitLabel = isCelsius ? 'C' : 'F'
   const theme = getTheme(weather?.current?.condition?.text, weather?.current?.is_day)
   const forecastDays = weather?.forecast?.forecastday || []
+  const forecastSummary = getForecastSummary(forecastDays)
   const alerts = weather?.alerts?.alert || []
   const airQuality = weather?.current?.air_quality || null
   const epaIndex = airQuality?.['us-epa-index'] || 0
@@ -278,6 +364,10 @@ function App() {
     const location = `${item.name}, ${item.country}`
     setShowSuggestions(false)
     loadWeather(location, 'search')
+  }
+
+  const refreshQuote = () => {
+    loadQuote()
   }
 
   const refreshMyLocation = () => {
@@ -649,6 +739,34 @@ function App() {
             transition={{ duration: 0.45, delay: 0.23 }}
           >
             <h3>3-Day Forecast</h3>
+            {forecastSummary && (
+              <div className="forecast-summary">
+                <div>
+                  <span>Today</span>
+                  <strong>
+                    {Math.round(isCelsius ? forecastSummary.today.day.mintemp_c : forecastSummary.today.day.mintemp_f)}
+                    / {Math.round(isCelsius ? forecastSummary.today.day.maxtemp_c : forecastSummary.today.day.maxtemp_f)}{unitLabel}
+                  </strong>
+                  <p>{forecastSummary.today.day.condition.text}</p>
+                </div>
+                <div>
+                  <span>Tomorrow</span>
+                  <strong>
+                    {Math.round(isCelsius ? forecastSummary.tomorrow.day.mintemp_c : forecastSummary.tomorrow.day.mintemp_f)}
+                    / {Math.round(isCelsius ? forecastSummary.tomorrow.day.maxtemp_c : forecastSummary.tomorrow.day.maxtemp_f)}{unitLabel}
+                  </strong>
+                  <p>Rain chance {forecastSummary.tomorrow.day.daily_chance_of_rain}%</p>
+                </div>
+                <div>
+                  <span>Next</span>
+                  <strong>
+                    {Math.round(isCelsius ? forecastSummary.nextDay.day.mintemp_c : forecastSummary.nextDay.day.mintemp_f)}
+                    / {Math.round(isCelsius ? forecastSummary.nextDay.day.maxtemp_c : forecastSummary.nextDay.day.maxtemp_f)}{unitLabel}
+                  </strong>
+                  <p>{forecastSummary.nextDay.day.condition.text}</p>
+                </div>
+              </div>
+            )}
             <div className="forecast-list">
               {forecastDays.map((day) => (
                 <article key={day.date_epoch} className="forecast-card">
@@ -666,10 +784,31 @@ function App() {
           </Motion.section>
 
           <Motion.section
+            className="panel quote-panel"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.25 }}
+          >
+            <div className="panel-head quote-head">
+              <div>
+                <h3>Random Quote</h3>
+                <p>Inspired from RapidAPI when available, with a local fallback.</p>
+              </div>
+              <button type="button" className="ghost quote-refresh" onClick={refreshQuote} disabled={quoteLoading}>
+                {quoteLoading ? 'Loading...' : 'New quote'}
+              </button>
+            </div>
+            <blockquote className="quote-card">
+              <p>“{quote.text}”</p>
+              <footer>— {quote.author}</footer>
+            </blockquote>
+          </Motion.section>
+
+          <Motion.section
             className="panel astro-panel"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.27 }}
+            transition={{ duration: 0.45, delay: 0.3 }}
           >
             <h3>Sun and Moon</h3>
             <div className="astro-grid">

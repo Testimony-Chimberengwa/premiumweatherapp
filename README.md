@@ -10,6 +10,7 @@ A high-energy animated weather dashboard built with React and WeatherAPI.
 - Current conditions with feels-like, wind, pressure, precipitation, and humidity
 - 24-hour visual chart for temperature and rain chance
 - 3-day forecast cards
+- Random quotes powered by RapidAPI with a local fallback when unavailable
 - Air quality metrics and US EPA quality label
 - Weather alerts panel (when available)
 - Astronomy panel for sunrise, sunset, moonrise, and moon phase
@@ -34,6 +35,7 @@ npm install
 
 ```bash
 VITE_WEATHER_API_KEY=your_weatherapi_key_here
+VITE_QUOTES_API_KEY=your_rapidapi_key_here
 ```
 
 3. Start dev server:
@@ -52,6 +54,12 @@ npm run build
 
 - Provider: WeatherAPI
 - Docs: https://www.weatherapi.com/docs/
+
+## Quotes API
+
+- Provider: RapidAPI Famous Quotes
+- Endpoint: `https://famous-quotes4.p.rapidapi.com/random?category=all&count=1`
+- Host: `famous-quotes4.p.rapidapi.com`
 
 ## Notes
 
